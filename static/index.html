@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SHL Assessment Recommender</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="background-orb orb1"></div>
+    <div class="background-orb orb2"></div>
+
+    <div class="container">
+        <header>
+            <h1>SHL <span class="highlight">Assessments</span></h1>
+            <p>AI-Powered Recommendation Engine</p>
+        </header>
+        
+        <main>
+            <div class="search-section">
+                <div class="input-wrapper">
+                    <textarea id="queryInput" placeholder="Paste a Job Description or describe your ideal candidate... (e.g., 'Senior Java Developer who can lead a team')"></textarea>
+                </div>
+                <button id="searchBtn" class="glow-on-hover">Get Recommendations</button>
+            </div>
+            
+            <div id="loading" class="hidden">
+                 <div class="spinner"></div>
+                 <p>Analyzing requirements...</p>
+            </div>
+            
+            <div id="resultsHeader" class="hidden">
+                <h2>Recommended Assessments</h2>
+                <p id="resultCount"></p>
+            </div>
+            
+            <div id="results" class="results-grid">
+                <!-- Cards injected here -->
+            </div>
+        </main>
+        
+        <footer>
+            <p>&copy; 2025 SHL Intelligence</p>
+        </footer>
+    </div>
+    <script src="app.js"></script>
+</body>
+</html>

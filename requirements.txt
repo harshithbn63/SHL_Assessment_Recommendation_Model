@@ -1,0 +1,17 @@
+fastapi
+uvicorn
+pandas
+numpy
+sentence-transformers
+scikit-learn
+python-multipart
+openpyxl
+xlrd
+beautifulsoup4
+requests
+transformers
+torch
+langchain
+langchain-community
+langchain-core
+faiss-cpu
