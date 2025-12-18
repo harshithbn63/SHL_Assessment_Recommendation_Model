@@ -16,11 +16,21 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Load recommender (FAISS + models)
+# Load recommender
 rec = AssessmentRecommender()
 
 class QueryRequest(BaseModel):
     query: str
+
+@app.get("/")
+def root():
+    return {
+        "message": "SHL Assessment Recommendation System is running",
+        "health": "/health",
+        "docs": "/docs",
+        "ui": "/ui",
+        "recommend": "/recommend"
+    }
 
 @app.get("/health")
 def health():
