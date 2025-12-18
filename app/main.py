@@ -3,10 +3,9 @@ from pydantic import BaseModel
 from .recommender import AssessmentRecommender
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-import uvicorn
 import os
 
-app = FastAPI()
+app = FastAPI(title="SHL Assessment Recommendation System")
 
 # CORS
 app.add_middleware(
@@ -17,6 +16,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Load recommender (FAISS + models)
 rec = AssessmentRecommender()
 
 class QueryRequest(BaseModel):
@@ -28,19 +28,14 @@ def health():
 
 @app.post("/recommend")
 def recommend(request: QueryRequest):
-    if not request.query:
+    if not request.query.strip():
         raise HTTPException(status_code=400, detail="Query is empty")
-    
-    results = rec.recommend(request.query)
-    return results
 
-# Mount static files
-# We need to find the absolute path to static folder relative to this file
-# This file is in app/main.py, static is in ../static
+    return rec.recommend(request.query)
+
+# Serve frontend at /ui
 base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-static_dir = os.path.join(base_dir, 'static')
+static_dir = os.path.join(base_dir, "static")
 
-app.mount("/", StaticFiles(directory=static_dir, html=True), name="static")
-
-if __name__ == "__main__":
-    uvicorn.run(app, host="127.0.0.1", port=8000)
+if os.path.exists(static_dir):
+    app.mount("/ui", StaticFiles(directory=static_dir, html=True), name="static")
