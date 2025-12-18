@@ -7,9 +7,12 @@ import ast
 import os
 import pickle
 from collections import Counter
+from dotenv import load_dotenv
 from langchain_community.vectorstores import FAISS
-from langchain_community.embeddings import HuggingFaceEmbeddings
+from langchain_google_genai import GoogleGenerativeAIEmbeddings
 from langchain_core.documents import Document
+
+load_dotenv()
 
 # Define paths
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -78,12 +81,8 @@ def ingest():
         doc = Document(page_content=text, metadata=metadata)
         documents.append(doc)
     
-    print("Initializing HuggingFaceEmbeddings (intfloat/e5-large-v2)...")
-    # Note: e5 models usually expect "query: " and "passage: " prefixes for optimal performance
-    embeddings = HuggingFaceEmbeddings(
-        model_name="intfloat/e5-large-v2",
-        encode_kwargs={"normalize_embeddings": True}
-    )
+    print("Initializing Google Gemini Embeddings (text-embedding-004)...")
+    embeddings = GoogleGenerativeAIEmbeddings(model="models/text-embedding-004")
     
     print("Building FAISS index...")
     # Add "passage: " prefix to documents for E5

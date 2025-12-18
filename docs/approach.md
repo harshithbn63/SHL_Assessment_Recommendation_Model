@@ -1,7 +1,7 @@
 # SHL Assessment Recommendation System - Technical Approach
 
 ## 1. Executive Summary
-This project implements a **Retrieval-Augmented Generation (RAG)** pipeline to solve the problem of matching job descriptions to technical and behavioral assessments. By combining **E5-Large embeddings** for search and **Flan-T5** for query understanding, the system provides high-precision, context-aware recommendations that outperform simple keyword matching.
+This project implements a **Retrieval-Augmented Generation (RAG)** pipeline to solve the problem of matching job descriptions to technical and behavioral assessments. By combining **Google Gemini APIs** for embeddings and query understanding, the system provides high-precision, context-aware recommendations while maintaining a low memory footprint suitable for cloud deployment.
 
 ---
 
@@ -9,8 +9,8 @@ This project implements a **Retrieval-Augmented Generation (RAG)** pipeline to s
 
 The recommendation engine follows a multi-stage pipeline:
 
-### A. Intent Extraction (Local LLM)
-- **Model**: Google `flan-t5-small`.
+### A. Intent Extraction (Google Gemini)
+- **Model**: `gemini-2.0-flash`.
 - **Function**: Parses raw queries into structured JSON containing:
   - `skills`: Specific technical or domain requirements.
   - `job_level`: Seniority context (Entry, Mid, Senior).
@@ -18,11 +18,11 @@ The recommendation engine follows a multi-stage pipeline:
   - `role_family`: General domain (Engineering, Sales, etc.).
 
 ### B. Embedding & Retrieval (LangChain + FAISS)
-- **Model**: `intfloat/e5-large-v2`.
+- **Model**: `text-embedding-004`.
 - **Process**: 
   - Each assessment is transformed into a structured document.
   - Documents are indexed in a **FAISS** vector store via **LangChain**.
-  - Queries are augmented with a `query: ` prefix (optimizing E5 performance) and matched against the index using cosine similarity.
+  - Queries are processed by Gemini Embeddings and matched against the index using cosine similarity.
 
 ### C. Training-Aware Re-ranking
 - **Popularity Bias**: The system extracts a "popularity map" from `train_data.csv`.
@@ -38,7 +38,7 @@ The recommendation engine follows a multi-stage pipeline:
 
 ## 3. Compliance & Standards
 - **Frameworks**: 100% compliant with **LangChain** and **FAISS** requirements.
-- **Privacy**: Uses **local models** exclusively; no external API calls (OpenAI, Anthropic, etc.) are made during recommendation.
+- **Privacy**: Uses **Google Gemini API**; ensuring data is handled via industry-standard encryption and API protocols.
 - **Reproducibility**: Includes a standalone `evaluate.py` script for performance verification.
 
 ---

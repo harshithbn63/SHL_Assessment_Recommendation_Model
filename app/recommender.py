@@ -16,9 +16,12 @@ import warnings
 import requests
 from bs4 import BeautifulSoup
 from collections import defaultdict
-from transformers import pipeline
+from dotenv import load_dotenv
+import google.generativeai as genai
+from langchain_google_genai import GoogleGenerativeAIEmbeddings
 from langchain_community.vectorstores import FAISS
-from langchain_community.embeddings import HuggingFaceEmbeddings
+
+load_dotenv()
 
 warnings.filterwarnings("ignore")
 
@@ -31,12 +34,9 @@ class AssessmentRecommender:
             popularity_path = os.path.join(base_dir, 'data', 'popularity_map.pkl')
             
         try:
-            print(f"Loading LangChain FAISS from {index_path}...")
-            # Use same embedding model as ingestion
-            embeddings = HuggingFaceEmbeddings(
-                model_name="intfloat/e5-large-v2",
-                encode_kwargs={"normalize_embeddings": True}
-            )
+            print(f"Loading LangChain FAISS index...")
+            # Use Google Gemini Embeddings
+            embeddings = GoogleGenerativeAIEmbeddings(model="models/text-embedding-004")
             self.vectorstore = FAISS.load_local(index_path, embeddings, allow_dangerous_deserialization=True)
             
             # Load Popularity Map
@@ -48,9 +48,10 @@ class AssessmentRecommender:
                 self.popularity_map = {}
                 print("Warning: popularity map not found")
             
-            # Initialize Local LLM for JSON parsing
-            print("Loading Local LLM (Flan-T5-small)...")
-            self.llm = pipeline("text2text-generation", model="google/flan-t5-small", max_length=512)
+            # Initialize Gemini LLM for JSON parsing
+            print("Initializing Gemini LLM (gemini-2.0-flash)...")
+            genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
+            self.llm = genai.GenerativeModel("gemini-2.0-flash")
             print("✓ System ready")
             
         except Exception as e:
@@ -84,13 +85,16 @@ Query:
 JSON:
 """
         try:
-            result = self.llm(prompt, max_length=256)[0]['generated_text']
+            response = self.llm.generate_content(prompt)
+            result = response.text
             # Match JSON block
             match = re.search(r"\{.*\}", result, re.S)
             if match:
                 return json.loads(match.group())
             return {}
-        except: return {}
+        except Exception as e:
+            print(f"LLM Error: {e}")
+            return {}
 
     def _rerank_with_train_bias(self, docs_with_scores, alpha=0.15):
         """
@@ -149,9 +153,8 @@ JSON:
         parsed = self._parse_query_with_llm(search_text)
         print(f"LLM Parsing result: {parsed}")
 
-        # 3. Retrieve Candidate Pool (E5 requires 'query: ' prefix)
-        query_text = f"query: {search_text}"
-        docs_with_scores = self.vectorstore.similarity_search_with_score(query_text, k=50)
+        # 3. Retrieve Candidate Pool
+        docs_with_scores = self.vectorstore.similarity_search_with_score(search_text, k=50)
 
         # 4. Popularity-Aware Re-ranking
         reranked = self._rerank_with_train_bias(docs_with_scores, alpha=0.2)
